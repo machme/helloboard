@@ -1,5 +1,6 @@
 package examples.helloboard.dao;
 import examples.helloboard.domain.Board;
+import examples.helloboard.domain.BoardInfo;
 import examples.helloboard.domain.Search;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
+import javax.servlet.jsp.tagext.TagInfo;
 import javax.sql.DataSource;
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +20,10 @@ import java.util.Map;
 public class BoardDao {
     private NamedParameterJdbcTemplate jdbc;
     private SimpleJdbcInsert insertAction;
-    private RowMapper<Board> rowMapper = BeanPropertyRowMapper.newInstance(Board.class);
+    private RowMapper<Board> boardRowMapper = BeanPropertyRowMapper.newInstance(Board.class);
+    private RowMapper<BoardInfo> boardInfoRowMapper = BeanPropertyRowMapper.newInstance(BoardInfo.class);
+    private RowMapper<TagInfo> tagInfoRowMapper = BeanPropertyRowMapper.newInstance(TagInfo.class);
+
 
     public BoardDao(DataSource dataSource) {
         this.jdbc = new NamedParameterJdbcTemplate(dataSource);
@@ -54,7 +59,7 @@ public class BoardDao {
                 "SELECT  board.idx, board.title " +
                         "FROM helloboard.board INNER JOIN helloboard.topic ON helloboard.board.topic_idx = helloboard.topic.idx " +
                         "WHERE helloboard.topic.name = 'notice' ORDER BY date DESC LIMIT :limitCount"
-                , params, rowMapper);
+                , params, boardRowMapper);
     }
 
     // 홈 화면에서 베스트 게시물 몇 개 select (카테고리 무관)
@@ -63,35 +68,14 @@ public class BoardDao {
         return jdbc.query(
                 "SELECT board.idx, board.title " +
                         "FROM board ORDER BY great DESC, view DESC, date DESC LIMIT 0, :limitCount "
-                , params, rowMapper);
+                , params, boardRowMapper);
     }
 
-    public List<Board> selectTagList(Search search, List<String> orderList) {
+    public List<BoardInfo> selectBoardList(Search search, List<String> orderList){
         MakeSQL madeSQL = new MakeSQL(search, orderList).invoke();
-        String where = madeSQL.getWhere();
-        String order = madeSQL.getOrder();
-        String limit = madeSQL.getLimit();
-        SqlParameterSource params = madeSQL.getParams();
-
-        StringBuilder sql = new StringBuilder("select b.idx, tag.name\n" +
-                "from board b\n" +
-                "join topic t on b.topic_idx = t.idx\n" +
-                "join category c on t.category_idx = c.idx\n" +
-                "join user u on b.user_idx = u.idx\n" +
-                "left outer join board_tag bt on b.idx = bt.board_idx\n" +
-                "left outer join tag on bt.tag_idx = tag.idx \n")
-                .append(where)
-                .append(order)
-                .append(limit);
-
-        return jdbc.query(sql.toString(), params, rowMapper);
-    }
-
-    public List<Board> selectBoardList(Search search, List<String> orderList){
-        MakeSQL madeSQL = new MakeSQL(search, orderList).invoke();
-        String where = madeSQL.getWhere();
-        String order = madeSQL.getOrder();
-        String limit = madeSQL.getLimit();
+        String where = madeSQL.getWhere().toString();
+        String order = madeSQL.getOrder().toString();
+        String limit = madeSQL.getLimit().toString();
         SqlParameterSource params = madeSQL.getParams();
 
         StringBuilder sql = new StringBuilder("select b.idx, b.title, b.date, b.view, b.great,\n" +
@@ -105,20 +89,75 @@ public class BoardDao {
                 "join user u on b.user_idx = u.idx\n" +
                 "join reply r on r.board_idx = b.idx\n")
                 .append(where)
-                .append("group by b.idx")
+                .append("group by b.idx\n")
                 .append(order)
                 .append(limit);
 
-        return jdbc.query(sql.toString(), params, rowMapper);
+        return jdbc.query(sql.toString(), params, boardInfoRowMapper);
     }
-    
+
+    public List<TagInfo> selectTagList(Search search, List<String> orderList) {
+        MakeSQL madeSQL = new MakeSQL(search, orderList).invoke();
+        String where = madeSQL.getWhere().toString();
+        String order = madeSQL.getOrder().toString();
+        String limit = madeSQL.getLimit().toString();
+        SqlParameterSource params = madeSQL.getParams();
+
+        StringBuilder sql = new StringBuilder("select tag.idx, tag.name,\n" +
+                "b.idx board_idx\n" +
+                "from board b\n" +
+                "join topic t on b.topic_idx = t.idx\n" +
+                "join category c on t.category_idx = c.idx\n" +
+                "join user u on b.user_idx = u.idx\n" +
+                "left outer join board_tag bt on b.idx = bt.board_idx\n" +
+                "left outer join tag on bt.tag_idx = tag.idx")
+                .append(where)
+                .append(order)
+                .append(limit);
+
+        return jdbc.query(sql.toString(), params, tagInfoRowMapper);
+    }
+
+    public BoardInfo selectBoardDetail(int boardID) {
+        Map<String, ?> params = Collections.singletonMap("boardId", boardID);
+
+        StringBuilder sql = new StringBuilder("select b.idx, b.title, b.content, b.date, b.view, b.great, b.file_idx,\n" +
+                "t.idx topic_idx, t.name topic_name,\n" +
+                "c.idx category_idx, c.name category_name,\n" +
+                "u.idx user_idx, u.id user_id,\n" +
+                "count(r.content) reply_count\n" +
+                "from board b\n" +
+                "join topic t on b.topic_idx = t.idx\n" +
+                "join category c on t.category_idx = c.idx\n" +
+                "join user u on b.user_idx = u.idx\n" +
+                "join reply r on r.board_idx = b.idx\n")
+                .append("where board_id = :boardId\n")
+                .append("group by b.idx");
+
+        return jdbc.queryForObject(sql.toString(), params, boardInfoRowMapper);
+    }
+
+    public List<TagInfo> selectTagDetail(int boardId) {
+        Map<String, ?> params = Collections.singletonMap("boardId", boardId);
+
+        StringBuilder sql = new StringBuilder("select tag.idx, tag.name,\n" +
+                "b.idx board_idx\n" +
+                "from board_tag bt\n" +
+                "left outer join board b on b.idx = bt.board_idx\n" +
+                "left outer join tag on bt.tag_idx = tag.idx\n")
+                .append("where b.idx = :boardID\n")
+                .append("order by tag.idx asc");
+
+        return jdbc.query(sql.toString(), params, tagInfoRowMapper);
+    }
+
 
     private class MakeSQL {
         private Search search;
         private List<String> orderList;
-        private String where;
-        private String order;
-        private String limit;
+        private StringBuilder where;
+        private StringBuilder order;
+        private StringBuilder limit;
         private SqlParameterSource params;
 
         public MakeSQL(Search search, List<String> orderList) {
@@ -126,15 +165,15 @@ public class BoardDao {
             this.orderList = orderList;
         }
 
-        public String getWhere() {
+        public StringBuilder getWhere() {
             return where;
         }
 
-        public String getOrder() {
+        public StringBuilder getOrder() {
             return order;
         }
 
-        public String getLimit() {
+        public StringBuilder getLimit() {
             return limit;
         }
 
@@ -143,9 +182,9 @@ public class BoardDao {
         }
 
         public MakeSQL invoke() {
-            where = " WHERE ";
-            order = " ORDER BY ";
-            limit = " LIMIT :curPage :pageNum";
+            where = new StringBuilder(" WHERE ");
+            order = new StringBuilder(" ORDER BY ");
+            limit = new StringBuilder(" LIMIT :curPage :pageNum");
             final String category = search.getCategory();
             final String topic = search.getTopic();
             final String searchStr = search.getSearchStr();
@@ -154,37 +193,37 @@ public class BoardDao {
             //        final Integer pageNum = search.getPageNum();
 
             if(category!=null){
-                where += "category.name="+category;
+                where.append("category.name=").append(category);
                 if(topic != null){
-                    where += " AND topic.name="+topic;
+                    where.append(" AND topic.name=").append(topic);
                 }
                 if(searchStr!=null){
-                    where += " AND ";
+                    where.append(" AND ");
                 }
             }
 
             if(searchStr != null){
-                where += "board."+searchType+" LIKE CONCAT('%',:searchStr,'%')";
+                where.append("board.").append(searchType).append(" LIKE CONCAT('%',:searchStr,'%')");
             }
 
             if(" WHERE ".equals(where)){
-                where = "";
+                where = new StringBuilder("");
             }
 
             if(orderList.size()>0){
-                order += (String)(orderList.get(0));
+                order.append((String)(orderList.get(0)));
             }
             for (int i=1, size=orderList.size(); i < size ; i++ ){
-                order += ","+orderList.get(i);
+                order.append(",").append(orderList.get(i));
             }
 
             if(" ORDER BY ".equals(order)){
-                order = "";
+                order = new StringBuilder("");
             }
 
-            System.out.println("where= "+where);
-            System.out.println("order= "+order);
-            System.out.println("limit= "+limit);
+            System.out.println("where= "+where.toString());
+            System.out.println("order= "+order.toString());
+            System.out.println("limit= "+limit.toString());
             System.out.println("search= "+search);
             //        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
             params = new BeanPropertySqlParameterSource(search);

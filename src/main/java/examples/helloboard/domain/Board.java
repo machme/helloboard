@@ -12,7 +12,7 @@ public class Board {
     private String title;
     private String content;
     private Integer fileIdx;
-    private Integer writerIdx;
+    private Integer userIdx;
     private String date;
     private Integer topicIdx;
     private Integer view;

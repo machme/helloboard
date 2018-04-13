@@ -91,13 +91,13 @@ public class BoardDao {
     public List<Board> selectBoardList(Search search, List<String> orderList){
         String where = " WHERE ";
         String order = " ORDER BY ";
-        String limit = " LIMIT ";
+        String limit = " LIMIT :curPage :pageNum";
         final String category = search.getCategory();
         final String topic = search.getTopic();
         final String searchStr = search.getSearchStr();
         final String searchType = search.getSearchType();
-        final Integer curPage = ( (search.getCurPage()==null) ? 1 : search.getCurPage() ) - 1;
-        final Integer pageNum = search.getPageNum();
+//        final Integer curPage = ( (search.getCurPage()==null) ? 1 : search.getCurPage() ) - 1;
+//        final Integer pageNum = search.getPageNum();
 
         if(category!=null){
             where += "category.name="+category;
@@ -118,7 +118,7 @@ public class BoardDao {
         }
 
         if(orderList.size()>0){
-            order += orderList.get(0);
+            order += (String)(orderList.get(0));
         }
         for (int i=1, size=orderList.size(); i < size ; i++ ){
             order += ","+orderList.get(i);
@@ -128,27 +128,38 @@ public class BoardDao {
             order = "";
         }
 
-        limit += curPage+" "+pageNum;
-
         System.out.println("where= "+where);
         System.out.println("order= "+order);
+        System.out.println("limit= "+limit);
+        System.out.println("search= "+search);
 //        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
         SqlParameterSource params = new BeanPropertySqlParameterSource(search);
-        return jdbc.query(
+        StringBuilder sql = new StringBuilder("SELECT board.date, board.great, board.view, board.idx, board.title")
+                .append("   , GROUP_CONCAT(tag.name SEPARATOR '/') AS ctagname")
+                .append(" FROM board_tag AS bt RIGHT OUTER JOIN board ON bt.board_idx = board.idx")
+                .append(" LEFT OUTER JOIN tag ON bt.tag_idx = tag.idx")
+                .append(" INNER JOIN topic ON board.topic_idx = topic.idx")
+                .append(" INNER JOIN category ON topic.category_idx = category.idx")
+                .append(where)
+                .append(" GROUP BY board.idx")
+                .append(order)
+                .append(limit)
+                ;
 
-                "SELECT board.date, board.great, board.view, board.idx, board.title" +
-                    "   , GROUP_CONCAT(tag.name SEPARATOR '/') AS ctagname" +
-                    "FROM board_tag AS bt RIGHT OUTER JOIN board ON bt.board_idx = board.idx" +
-                    "LEFT OUTER JOIN tag ON bt.tag_idx = tag.idx" +
-                    "INNER JOIN topic ON board.topic_idx = topic.idx" +
-                    "INNER JOIN category ON topic.category_idx = category.idx" +
-                    where +
-//                    "WHERE category.name='qna' AND topic.name='java' AND board.title LIKE CONCAT('%','제목','%')" +
-                    "GROUP BY board.idx" +
-                    order +
-//                    "ORDER BY board.date DESC"
-                    limit
-                , params, rowMapper);
+//        "SELECT board.date, board.great, board.view, board.idx, board.title" +
+//                "   , GROUP_CONCAT(tag.name SEPARATOR '/') AS ctagname" +
+//                "FROM board_tag AS bt RIGHT OUTER JOIN board ON bt.board_idx = board.idx" +
+//                "LEFT OUTER JOIN tag ON bt.tag_idx = tag.idx" +
+//                "INNER JOIN topic ON board.topic_idx = topic.idx" +
+//                "INNER JOIN category ON topic.category_idx = category.idx" +
+//                where +
+////                    "WHERE category.name='qna' AND topic.name='java' AND board.title LIKE CONCAT('%','제목','%')" +
+//                "GROUP BY board.idx" +
+//                order +
+////                    "ORDER BY board.date DESC"
+//                limit
+
+        return jdbc.query(sql.toString(), params, rowMapper);
     }
 
 

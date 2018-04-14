@@ -6,12 +6,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.accept.ContentNegotiationManager;
 import org.springframework.web.accept.ContentNegotiationManagerFactoryBean;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.view.BeanNameViewResolver;
 import org.springframework.web.servlet.view.ContentNegotiatingViewResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
@@ -39,12 +41,30 @@ public class WebMvcContextConfiguration extends WebMvcConfigurerAdapter {
     public void addViewControllers(final ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("main");
     }
-    
+
+    //파일 업로드를 위한 resolver
+    @Bean
+    public CommonsMultipartResolver multipartResolver(){
+        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+        multipartResolver.setMaxUploadSize(1024*1024*50);
+        multipartResolver.setDefaultEncoding("utf-8");
+        return multipartResolver;
+    }
+
     @Bean
     public InternalResourceViewResolver getInternalResourceViewResolver() {
         InternalResourceViewResolver resolver = new InternalResourceViewResolver();
         resolver.setPrefix("/WEB-INF/views/");
         resolver.setSuffix(".jsp");
+        resolver.setOrder(1);
         return resolver;
     }
+
+    @Bean
+    public ViewResolver beanNameViewResolver(){
+	    BeanNameViewResolver beanNameViewResolver = new BeanNameViewResolver();
+	    beanNameViewResolver.setOrder(0);
+	    return beanNameViewResolver;
+    }
+
 }

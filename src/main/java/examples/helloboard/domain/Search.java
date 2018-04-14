@@ -7,7 +7,7 @@ public class Search {
     private String searchStr;
     private String order;
     private Integer curPage;
-    private Integer pageNum;
+    private Integer listCountForPage;
 
     public Integer getCurPage() {
         return curPage;
@@ -17,12 +17,12 @@ public class Search {
         this.curPage = curPage;
     }
 
-    public Integer getPageNum() {
-        return pageNum;
+    public Integer getListCountForPage() {
+        return listCountForPage;
     }
 
-    public void setPageNum(Integer pageNum) {
-        this.pageNum = pageNum;
+    public void setListCountForPage(Integer pageNum) {
+        this.listCountForPage = pageNum;
     }
 
     public String getCategory() {

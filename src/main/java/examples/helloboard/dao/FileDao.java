@@ -50,11 +50,11 @@ public class FileDao {
         return jdbc.update(sql.toString(), params);
     }
 
-    public File selectFile(int fileIdx){
+    public File selectFile(int boardIdx){
         StringBuilder sql = new StringBuilder(
-                "SELECT idx, name, path, size, format FROM file WHERE idx = :fileIdx"
+                "SELECT idx, name, path, size, format FROM file WHERE board_idx = :boardIdx"
         );
-        Map<String, ?> params = Collections.singletonMap("fileIdx", fileIdx);
+        Map<String, ?> params = Collections.singletonMap("boardIdx", boardIdx);
         return jdbc.queryForObject(sql.toString(), params, rowMapper);
     }
 }

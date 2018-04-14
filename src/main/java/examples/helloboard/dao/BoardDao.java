@@ -53,23 +53,22 @@ public class BoardDao {
     }
 
     // 홈 화면에서 공지 최신 몇 개 select
-    public List<Board> selectBoardLimit(int limitCount){
-        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
-        return jdbc.query(
-                "SELECT  board.idx, board.title " +
-                        "FROM helloboard.board INNER JOIN helloboard.topic ON helloboard.board.topic_idx = helloboard.topic.idx " +
-                        "WHERE helloboard.topic.name = 'notice' ORDER BY date DESC LIMIT :limitCount"
-                , params, boardRowMapper);
-    }
-
+//    public List<Board> selectBoardLimit(int limitCount){
+//        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
+//        return jdbc.query(
+//                "SELECT  board.idx, board.title " +
+//                        "FROM helloboard.board INNER JOIN helloboard.topic ON helloboard.board.topic_idx = helloboard.topic.idx " +
+//                        "WHERE helloboard.topic.name = 'notice' ORDER BY date DESC LIMIT :limitCount"
+//                , params, boardRowMapper);
+//    }
     // 홈 화면에서 베스트 게시물 몇 개 select (카테고리 무관)
-    public List<Board> selectBoardOrderGreatViewDateLimit(int limitCount){
-        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
-        return jdbc.query(
-                "SELECT board.idx, board.title " +
-                        "FROM board ORDER BY great DESC, view DESC, date DESC LIMIT 0, :limitCount "
-                , params, boardRowMapper);
-    }
+//    public List<Board> selectBoardOrderGreatViewDateLimit(int limitCount){
+//        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
+//        return jdbc.query(
+//                "SELECT board.idx, board.title " +
+//                        "FROM board ORDER BY great DESC, view DESC, date DESC LIMIT 0, :limitCount "
+//                , params, boardRowMapper);
+//    }
 
     public List<BoardInfo> selectBoardList(Search search, List<String> orderList){
         MakeSQL madeSQL = new MakeSQL(search, orderList).invoke();
@@ -150,7 +149,6 @@ public class BoardDao {
 
         return jdbc.query(sql.toString(), params, tagInfoRowMapper);
     }
-
 
     private class MakeSQL {
         private Search search;

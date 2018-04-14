@@ -20,10 +20,7 @@ import java.util.Map;
 public class BoardDao {
     private NamedParameterJdbcTemplate jdbc;
     private SimpleJdbcInsert insertAction;
-    private RowMapper<Board> boardRowMapper = BeanPropertyRowMapper.newInstance(Board.class);
     private RowMapper<BoardInfo> boardInfoRowMapper = BeanPropertyRowMapper.newInstance(BoardInfo.class);
-    private RowMapper<TagInfo> tagInfoRowMapper = BeanPropertyRowMapper.newInstance(TagInfo.class);
-
 
     public BoardDao(DataSource dataSource) {
         this.jdbc = new NamedParameterJdbcTemplate(dataSource);
@@ -47,8 +44,8 @@ public class BoardDao {
 
     public int updateBoard(Board board){
         SqlParameterSource params = new BeanPropertySqlParameterSource(board);
-        return jdbc.update("UPDATE board SET title = :title , content= :content, file_idx= :fileIdx" +
-                ", writer_idx= :writerIdx, date= :date, topic_idx= :topicIdx, view= :view, great= :great " +
+        return jdbc.update("UPDATE board SET title = :title , content= :content, " +
+                ", user_idx= :userIdx, date= :date, topic_idx= :topicIdx, view= :view, great= :great " +
                 "WHERE idx= :idx", params);
     }
 
@@ -74,25 +71,6 @@ public class BoardDao {
         return jdbc.query(sql.toString(), params, boardInfoRowMapper);
     }
 
-    public List<TagInfo> selectTagList(Search search, List<String> orderList) {
-        AdditionalSQL additionalSQL = new AdditionalSQL(search, orderList);
-        SqlParameterSource params = new BeanPropertySqlParameterSource(search);
-
-        StringBuilder sql = new StringBuilder("select tag.idx, tag.name,\n" +
-                "b.idx board_idx\n" +
-                "from board b\n" +
-                "join topic t on b.topic_idx = t.idx\n" +
-                "join category c on t.category_idx = c.idx\n" +
-                "join user u on b.user_idx = u.idx\n" +
-                "left outer join board_tag bt on b.idx = bt.board_idx\n" +
-                "left outer join tag on bt.tag_idx = tag.idx")
-                .append(additionalSQL.makeWhereSQL())
-                .append(additionalSQL.makeOrderSQL())
-                .append(additionalSQL.makeLimitSQL());
-
-        return jdbc.query(sql.toString(), params, tagInfoRowMapper);
-    }
-
     public BoardInfo selectBoardDetail(int boardID) {
         Map<String, ?> params = Collections.singletonMap("boardId", boardID);
 
@@ -112,18 +90,6 @@ public class BoardDao {
         return jdbc.queryForObject(sql.toString(), params, boardInfoRowMapper);
     }
 
-    public List<TagInfo> selectTagDetail(int boardId) {
-        Map<String, ?> params = Collections.singletonMap("boardId", boardId);
 
-        StringBuilder sql = new StringBuilder("select tag.idx, tag.name,\n" +
-                "b.idx board_idx\n" +
-                "from board_tag bt\n" +
-                "left outer join board b on b.idx = bt.board_idx\n" +
-                "left outer join tag on bt.tag_idx = tag.idx\n")
-                .append("where b.idx = :boardID\n")
-                .append("order by tag.idx asc");
-
-        return jdbc.query(sql.toString(), params, tagInfoRowMapper);
-    }
 
 }

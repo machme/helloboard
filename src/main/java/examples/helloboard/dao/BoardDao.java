@@ -52,30 +52,9 @@ public class BoardDao {
                 "WHERE idx= :idx", params);
     }
 
-    // 홈 화면에서 공지 최신 몇 개 select
-//    public List<Board> selectBoardLimit(int limitCount){
-//        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
-//        return jdbc.query(
-//                "SELECT  board.idx, board.title " +
-//                        "FROM helloboard.board INNER JOIN helloboard.topic ON helloboard.board.topic_idx = helloboard.topic.idx " +
-//                        "WHERE helloboard.topic.name = 'notice' ORDER BY date DESC LIMIT :limitCount"
-//                , params, boardRowMapper);
-//    }
-    // 홈 화면에서 베스트 게시물 몇 개 select (카테고리 무관)
-//    public List<Board> selectBoardOrderGreatViewDateLimit(int limitCount){
-//        Map<String, ?> params = Collections.singletonMap("limitCount", limitCount);
-//        return jdbc.query(
-//                "SELECT board.idx, board.title " +
-//                        "FROM board ORDER BY great DESC, view DESC, date DESC LIMIT 0, :limitCount "
-//                , params, boardRowMapper);
-//    }
-
     public List<BoardInfo> selectBoardList(Search search, List<String> orderList){
-        MakeSQL madeSQL = new MakeSQL(search, orderList).invoke();
-        String where = madeSQL.getWhere().toString();
-        String order = madeSQL.getOrder().toString();
-        String limit = madeSQL.getLimit().toString();
-        SqlParameterSource params = madeSQL.getParams();
+        AdditionalSQL additionalSQL = new AdditionalSQL(search, orderList);
+        SqlParameterSource params = new BeanPropertySqlParameterSource(search);
 
         StringBuilder sql = new StringBuilder("select b.idx, b.title, b.date, b.view, b.great,\n" +
                 "t.idx topic_idx, t.name topic_name,\n" +
@@ -87,20 +66,17 @@ public class BoardDao {
                 "join category c on t.category_idx = c.idx\n" +
                 "join user u on b.user_idx = u.idx\n" +
                 "join reply r on r.board_idx = b.idx\n")
-                .append(where)
+                .append(additionalSQL.makeWhereSQL())
                 .append("group by b.idx\n")
-                .append(order)
-                .append(limit);
+                .append(additionalSQL.makeOrderSQL())
+                .append(additionalSQL.makeLimitSQL());
 
         return jdbc.query(sql.toString(), params, boardInfoRowMapper);
     }
 
     public List<TagInfo> selectTagList(Search search, List<String> orderList) {
-        MakeSQL madeSQL = new MakeSQL(search, orderList).invoke();
-        String where = madeSQL.getWhere().toString();
-        String order = madeSQL.getOrder().toString();
-        String limit = madeSQL.getLimit().toString();
-        SqlParameterSource params = madeSQL.getParams();
+        AdditionalSQL additionalSQL = new AdditionalSQL(search, orderList);
+        SqlParameterSource params = new BeanPropertySqlParameterSource(search);
 
         StringBuilder sql = new StringBuilder("select tag.idx, tag.name,\n" +
                 "b.idx board_idx\n" +
@@ -110,9 +86,9 @@ public class BoardDao {
                 "join user u on b.user_idx = u.idx\n" +
                 "left outer join board_tag bt on b.idx = bt.board_idx\n" +
                 "left outer join tag on bt.tag_idx = tag.idx")
-                .append(where)
-                .append(order)
-                .append(limit);
+                .append(additionalSQL.makeWhereSQL())
+                .append(additionalSQL.makeOrderSQL())
+                .append(additionalSQL.makeLimitSQL());
 
         return jdbc.query(sql.toString(), params, tagInfoRowMapper);
     }

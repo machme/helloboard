@@ -14,4 +14,5 @@ public class File {
     private String path;
     private Integer size;
     private String format;
+    private Integer boardIdx;
 }

@@ -1,6 +1,7 @@
 package examples.helloboard.view;
 
 
+import examples.helloboard.domain.FileDetail;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.servlet.view.AbstractView;
@@ -16,14 +17,15 @@ import java.util.Map;
 @Component("fileView")
 public class FileView extends AbstractView {
     @Override
-    protected void renderMergedOutputModel(Map<String, Object> map, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        File file = (File)map.get("file");
+    protected void renderMergedOutputModel(Map<String, Object> fileMap, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        FileDetail fileDetail = (FileDetail)fileMap.get("file'");
+        File file = new File(fileDetail.getPath());
 
         response.setContentType(getContentType());
-        response.setContentLength((int)file.length());
+        response.addHeader("Content-Length", Long.toString(fileDetail.getSize()));
 
         String userAgent = request.getHeader("User-Agent");
-        String filename = file.getName();
+        String filename = fileDetail.getName();
 
         if (userAgent.contains("Trident")||(userAgent.indexOf("MSIE")>-1)) {
             logger.debug("user-agent:IE under 10 : "+userAgent );

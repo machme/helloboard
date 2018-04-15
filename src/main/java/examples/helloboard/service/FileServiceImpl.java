@@ -1,22 +1,15 @@
 package examples.helloboard.service;
 
 import examples.helloboard.dao.FileDao;
-import examples.helloboard.domain.File;
+import examples.helloboard.domain.FileDetail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -37,8 +30,8 @@ public class FileServiceImpl implements FileService {
             MultipartFile mFile = fileMap.get(key);
 
             //파일 정보를 객체 담는다
-            File file = new File();
-            file.setSize(mFile.getSize());
+            FileDetail fileDetail = new FileDetail();
+            fileDetail.setSize(mFile.getSize());
             String fileName = mFile.getOriginalFilename();
             String ext = "";
             int extIdx = fileName.lastIndexOf(".");
@@ -46,8 +39,8 @@ public class FileServiceImpl implements FileService {
                 ext = fileName.substring(extIdx+1);
             }
             String mimeType = getMimeType(ext);
-            file.setFormat(mimeType);
-            file.setPath(path);
+            fileDetail.setFormat(mimeType);
+            fileDetail.setPath(path);
 
             //서버에 저장
             try(FileOutputStream fos = new FileOutputStream(fileName)){
@@ -58,7 +51,7 @@ public class FileServiceImpl implements FileService {
             }
 
             //DB에 insert
-            fileDao.insertFile(file);
+            fileDao.insertFile(fileDetail);
         }
     }
 

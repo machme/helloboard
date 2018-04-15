@@ -14,4 +14,5 @@ public class FileDetail {
     private String path;
     private Long size;
     private String format;
+    private Integer boardIdx;
 }

@@ -11,8 +11,7 @@ public class Board {
     private Integer idx;
     private String title;
     private String content;
-    private Integer fileIdx;
-    private Integer writerIdx;
+    private Integer userIdx;
     private String date;
     private Integer topicIdx;
     private Integer view;

@@ -1,0 +1,149 @@
+﻿-- 테이블 순서는 관계를 고려하여 한 번에 실행해도 에러가 발생하지 않게 정렬되었습니다.
+
+-- category Table Create SQL
+CREATE TABLE category
+(
+    `idx`   INT            NOT NULL    AUTO_INCREMENT COMMENT '카테고리 인덱스', 
+    `name`  VARCHAR(20)    NOT NULL    COMMENT '카테고리 이름', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE category COMMENT '카테고리';
+
+
+-- grade Table Create SQL
+CREATE TABLE grade
+(
+    `idx`   INT            NOT NULL    AUTO_INCREMENT COMMENT '등급 인덱스', 
+    `name`  VARCHAR(20)    NOT NULL    COMMENT '등급 이름', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE grade COMMENT '등급';
+
+
+-- user Table Create SQL
+CREATE TABLE user
+(
+    `idx`        INT            NOT NULL    AUTO_INCREMENT COMMENT '사용자 인덱스', 
+    `email`      VARCHAR(45)    NOT NULL    COMMENT '이메일', 
+    `pw`         VARCHAR(20)    NOT NULL    COMMENT '비밀번호', 
+    `id`         VARCHAR(20)    NOT NULL    COMMENT '아이디', 
+    `join_date`  DATETIME       NOT NULL    COMMENT '가입시간', 
+    `name`       VARCHAR(30)    NOT NULL    COMMENT '이름', 
+    `grade_idx`  INT            NOT NULL    COMMENT '등급 인덱스', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE user COMMENT '사용자';
+
+ALTER TABLE user ADD CONSTRAINT FK_user_grade_idx_grade_idx FOREIGN KEY (grade_idx)
+ REFERENCES grade (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- topic Table Create SQL
+CREATE TABLE topic
+(
+    `idx`           INT            NOT NULL    AUTO_INCREMENT COMMENT '하위카테고리 인덱스', 
+    `name`          VARCHAR(30)    NOT NULL    COMMENT '하위카테고리 이름', 
+    `category_idx`  INT            NOT NULL    COMMENT '카테고리 인덱스', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE topic COMMENT '하위 카테고리';
+
+ALTER TABLE topic ADD CONSTRAINT FK_topic_category_idx_category_idx FOREIGN KEY (category_idx)
+ REFERENCES category (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- file Table Create SQL
+CREATE TABLE file
+(
+    `idx`     INT             NOT NULL    AUTO_INCREMENT COMMENT '첨부파일 인 덱스', 
+    `name`    VARCHAR(45)     NOT NULL    COMMENT '파일명', 
+    `path`    VARCHAR(100)    NOT NULL    COMMENT '파일 경로', 
+    `size`    INT             NOT NULL    COMMENT '용량(바이트)', 
+    `format`  VARCHAR(20)     NOT NULL    COMMENT '파일 형식', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE file COMMENT '첨부파일';
+
+
+-- board Table Create SQL
+CREATE TABLE board
+(
+    `idx`        INT            NOT NULL    AUTO_INCREMENT COMMENT '게시글 인덱스', 
+    `title`      VARCHAR(45)    NOT NULL    COMMENT '제목', 
+    `content`    TEXT           NULL        COMMENT '내용', 
+    `file_idx`   INT            NULL        COMMENT '첨부파일 인덱스', 
+    `user_idx`   INT            NOT NULL    COMMENT '작성자', 
+    `date`       DATETIME       NOT NULL    COMMENT '작성시간', 
+    `topic_idx`  INT            NOT NULL    COMMENT '하위카테고리 인덱스', 
+    `view`       INT            NOT NULL    COMMENT '게시글 조회수', 
+    `great`      INT            NOT NULL    COMMENT '추천수', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE board COMMENT '게시글';
+
+ALTER TABLE board ADD CONSTRAINT FK_board_user_idx_user_idx FOREIGN KEY (user_idx)
+ REFERENCES user (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE board ADD CONSTRAINT FK_board_topic_idx_topic_idx FOREIGN KEY (topic_idx)
+ REFERENCES topic (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE board ADD CONSTRAINT FK_board_file_idx_file_idx FOREIGN KEY (file_idx)
+ REFERENCES file (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- tag Table Create SQL
+CREATE TABLE tag
+(
+    `idx`        INT            NOT NULL    AUTO_INCREMENT COMMENT '태그 인덱스', 
+    `name`       VARCHAR(20)    NOT NULL    COMMENT '태그 이름', 
+    `ref_count`  INT            NOT NULL    COMMENT '참조 수', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE tag COMMENT '태그';
+
+
+-- reply Table Create SQL
+CREATE TABLE reply
+(
+    `idx`        INT         NOT NULL    AUTO_INCREMENT COMMENT '댓글 인덱스', 
+    `user_idx`   INT         NOT NULL    COMMENT '작성자', 
+    `content`    TEXT        NOT NULL    COMMENT '댓글 내용', 
+    `board_idx`  INT         NOT NULL    COMMENT '게시글 인덱스', 
+    `date`       DATETIME    NOT NULL    COMMENT '작성일', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE reply COMMENT '댓글';
+
+ALTER TABLE reply ADD CONSTRAINT FK_reply_user_idx_user_idx FOREIGN KEY (user_idx)
+ REFERENCES user (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE reply ADD CONSTRAINT FK_reply_board_idx_board_idx FOREIGN KEY (board_idx)
+ REFERENCES board (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- board_tag Table Create SQL
+CREATE TABLE board_tag
+(
+    `board_idx`  INT    NOT NULL    COMMENT '게시글 인덱스', 
+    `tag_idx`    INT    NOT NULL    COMMENT '태그 인덱스', 
+    `idx`        INT    NOT NULL    AUTO_INCREMENT COMMENT '보드태그 인덱스', 
+    PRIMARY KEY (idx)
+);
+
+ALTER TABLE board_tag COMMENT '보드_태그';
+
+ALTER TABLE board_tag ADD CONSTRAINT FK_board_tag_board_idx_board_idx FOREIGN KEY (board_idx)
+ REFERENCES board (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE board_tag ADD CONSTRAINT FK_board_tag_tag_idx_tag_idx FOREIGN KEY (tag_idx)
+ REFERENCES tag (idx)  ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+

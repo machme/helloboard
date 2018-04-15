@@ -8,11 +8,11 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class File {
+public class FileDetail {
     private Integer idx;
     private String name;
     private String path;
-    private Integer size;
+    private Long size;
     private String format;
     private Integer boardIdx;
 }

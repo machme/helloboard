@@ -8,10 +8,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class File {
+public class FileInfo {
     private Integer idx;
     private String name;
     private String path;
-    private Integer size;
+    private Long size;
     private String format;
 }
